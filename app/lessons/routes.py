@@ -1,15 +1,14 @@
-# app/lessons/routes.py
 from flask import request, jsonify
 from flask_login import login_required, current_user
-from app.models import Lesson, UserProgress, User # Importa modelos
-from app import db # Importa a instância db global
-from app.lessons import lessons_bp # Importa o blueprint
+from app.models import Lesson, UserProgress, User
+from app import db
+from app.lessons import lessons_bp
 import datetime
 
 @lessons_bp.route('/', methods=['GET'])
 @login_required
 def get_lessons():
-    lessons = Lesson.query.order_by(Lesson.order_index).all() # Ordena por order_index
+    lessons = Lesson.query.order_by(Lesson.order_index).all()
     lessons_data = []
     for lesson in lessons:
         progress = UserProgress.query.filter_by(user_id=current_user.id, lesson_id=lesson.id).first()
@@ -103,3 +102,45 @@ def get_user_progress():
         "next_lesson": next_lesson,
         "completed_lesson_ids": completed_lesson_ids
     }), 200
+    
+@lessons_bp.route('/', methods=['POST'])
+@login_required
+def create_lesson():
+    data = request.get_json()
+    title = data.get('title')
+    content = data.get('content')
+    challenge_question = data.get('challenge_question')
+    challenge_answer = data.get('challenge_answer')
+    points_awarded = data.get('points_awarded', 10) # Padrão 10 se não for fornecido
+    order_index = data.get('order_index')
+
+    if not all([title, content, challenge_question, challenge_answer, order_index is not None]):
+        return jsonify({"message": "Todos os campos obrigatórios (title, content, challenge_question, challenge_answer, order_index) são necessários."}), 400
+
+    if Lesson.query.filter_by(order_index=order_index).first():
+        return jsonify({"message": f"Já existe uma lição com o índice de ordem {order_index}. Escolha outro."}), 409
+
+    try:
+        new_lesson = Lesson(
+            title=title,
+            content=content,
+            challenge_question=challenge_question,
+            challenge_answer=challenge_answer.lower(),
+            points_awarded=points_awarded,
+            order_index=order_index
+        )
+        db.session.add(new_lesson)
+        db.session.commit()
+
+        return jsonify({
+            "message": "Lição criada com sucesso!",
+            "lesson": {
+                "id": new_lesson.id,
+                "title": new_lesson.title,
+                "order_index": new_lesson.order_index
+            }
+        }), 201
+
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"message": f"Erro ao criar lição: {str(e)}"}), 500

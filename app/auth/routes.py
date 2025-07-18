@@ -1,9 +1,8 @@
-# app/auth/routes.py
 from flask import request, jsonify
 from flask_login import login_user, logout_user, login_required, current_user
-from app.models import User # Importa User do app.models
-from app import db # Importa a instância db global
-from app.auth import auth_bp # Importa o blueprint
+from app.models import User
+from app import db
+from app.auth import auth_bp
 
 @auth_bp.route('/register', methods=['POST'])
 def register():

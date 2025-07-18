@@ -1,5 +1,4 @@
-# app/models.py
-from app import db # Importa a instância db global
+from app import db
 from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
 import datetime
@@ -7,7 +6,7 @@ import datetime
 class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(64), unique=True, nullable=False)
-    password_hash = db.Column(db.String(256), nullable=False) # Garante tamanho suficiente
+    password_hash = db.Column(db.String(256), nullable=False)
     points = db.Column(db.Integer, default=0)
 
     progresses = db.relationship('UserProgress', backref='user', lazy='dynamic')
@@ -41,7 +40,6 @@ class UserProgress(db.Model):
     lesson_id = db.Column(db.Integer, db.ForeignKey('lesson.id'), nullable=False)
     is_completed = db.Column(db.Boolean, default=False)
     completed_at = db.Column(db.DateTime, default=datetime.datetime.utcnow)
-    # Adicionado updated_at aqui para consistência
     updated_at = db.Column(db.DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
 
     __table_args__ = (db.UniqueConstraint('user_id', 'lesson_id', name='_user_lesson_uc'),)
