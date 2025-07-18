@@ -1,15 +1,14 @@
-# app/lessons/routes.py
 from flask import request, jsonify
 from flask_login import login_required, current_user
-from app.models import Lesson, UserProgress, User # Importa modelos
-from app import db # Importa a instância db global
-from app.lessons import lessons_bp # Importa o blueprint
+from app.models import Lesson, UserProgress, User
+from app import db
+from app.lessons import lessons_bp
 import datetime
 
 @lessons_bp.route('/', methods=['GET'])
 @login_required
 def get_lessons():
-    lessons = Lesson.query.order_by(Lesson.order_index).all() # Ordena por order_index
+    lessons = Lesson.query.order_by(Lesson.order_index).all()
     lessons_data = []
     for lesson in lessons:
         progress = UserProgress.query.filter_by(user_id=current_user.id, lesson_id=lesson.id).first()
