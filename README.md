@@ -1,13 +1,13 @@
 
-# 📚 ezDin Backend
+# 📚 ezDin Back-end
 
 
 
 ## 🎯 Sobre o Projeto
 
-Essa é a **espinha dorsal** do webapp gamificado de finanças pessoais "ezDin". Ele gerencia toda a lógica de negócio, persistência de dados e a comunicação com o frontend. Nosso objetivo é fornecer uma plataforma robusta e escalável para ensinar finanças pessoais de forma simples, prática e acessível, promovendo autonomia e inclusão.
+Essa é a **espinha dorsal** do webapp gamificado de finanças pessoais "ezDin". Ele gerencia toda a lógica de negócio, persistência de dados e a comunicação com o front-end. Nosso objetivo é fornecer uma plataforma robusta e escalável para ensinar finanças pessoais de forma simples, prática e acessível, promovendo autonomia e inclusão.
 
-Este repositório contém o código-fonte do backend, desenvolvido com foco em performance, modularidade e boas práticas.
+Este repositório contém o código-fonte do back-end, desenvolvido com foco em performance, modularidade e boas práticas.
 
 -----
 
@@ -43,7 +43,7 @@ A [**Documentação da API**](https://docs.google.com/document/d/1yylwQ_xY432M3S
 
 ## 🤝 Contribuição
 
-Contribuições são bem-vindas\! Se você tiver sugestões ou encontrar problemas, por favor, abra uma *issue* ou envie um *pull request*.
+Contribuições são bem-vindas! Se você tiver sugestões ou encontrar problemas, por favor, abra uma *issue* ou envie um *pull request*.
 
 -----
 
