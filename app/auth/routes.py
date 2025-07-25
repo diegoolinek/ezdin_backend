@@ -3,6 +3,8 @@ from flask_login import login_user, logout_user, login_required, current_user
 from app.models import User
 from app import db
 from app.auth import auth_bp
+import datetime
+
 
 @auth_bp.route('/register', methods=['POST'])
 def register():
@@ -35,6 +37,7 @@ def register():
         "avatar_url": new_user.avatar_url
     }), 201
 
+
 @auth_bp.route('/login', methods=['POST'])
 def login():
     data = request.get_json()
@@ -61,11 +64,13 @@ def login():
     else:
         return jsonify({"message": "Invalid username or password"}), 401
 
+
 @auth_bp.route('/logout', methods=['POST'])
 @login_required
 def logout():
     logout_user()
     return jsonify({"message": "Logout successful"}), 200
+
 
 @auth_bp.route('/status', methods=['GET'])
 def get_user_status():
@@ -85,3 +90,49 @@ def get_user_status():
         }), 200
     else:
         return jsonify({"is_authenticated": False}), 200
+
+
+@auth_bp.route('/profile', methods=['PUT'])
+@login_required 
+def update_profile():
+    data = request.get_json()
+
+    name = data.get('name')
+    bio = data.get('bio')
+    avatar_url = data.get('avatar_url')
+    # O username e a senha geralmente não são atualizados nesta rota de perfil
+    # mas poderiam ser adicionados com validação extra se necessário.
+
+    user = current_user # Acessa o usuário logado
+
+    try:
+        if name is not None: # Apenas atualiza se o campo foi fornecido
+            user.name = name
+        if bio is not None:
+            user.bio = bio
+        if avatar_url is not None:
+            user.avatar_url = avatar_url
+
+        # Você pode adicionar um campo 'updated_at' no modelo User
+        # para registrar a última atualização se quiser.
+        # Por exemplo: user.updated_at = datetime.datetime.utcnow()
+
+        db.session.add(user)
+        db.session.commit()
+
+        return jsonify({
+            "message": "Perfil atualizado com sucesso!",
+            "user": {
+                "id": user.id,
+                "username": user.username,
+                "points": user.points,
+                "name": user.name,
+                "bio": user.bio,
+                "joined_date": user.joined_date.isoformat(),
+                "avatar_url": user.avatar_url
+            }
+        }), 200
+
+    except Exception as e:
+        db.session.rollback() # Desfaz a transação em caso de erro
+        return jsonify({"message": f"Erro ao atualizar perfil: {str(e)}"}), 500
