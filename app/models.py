@@ -5,9 +5,13 @@ import datetime
 
 class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(64), unique=True, nullable=False)
+    username = db.Column(db.String(64), unique=True, nullable=False) # Email do usuário
     password_hash = db.Column(db.String(256), nullable=False)
     points = db.Column(db.Integer, default=0)
+    name = db.Column(db.String(100), nullable=True) # Nome completo ou apelido, opcional
+    bio = db.Column(db.Text, nullable=True)
+    joined_date = db.Column(db.DateTime, default=datetime.datetime.utcnow, nullable=False) # Data de cadastro
+    avatar_url = db.Column(db.String(256), nullable=True) # URL para a imagem do avatar, opcional
 
     progresses = db.relationship('UserProgress', backref='user', lazy='dynamic')
 

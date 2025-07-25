@@ -9,6 +9,9 @@ def register():
     data = request.get_json()
     username = data.get('username')
     password = data.get('password')
+    name = data.get('name')
+    bio = data.get('bio')
+    avatar_url = data.get('avatar_url')
 
     if not username or not password:
         return jsonify({"message": "Username and password are required"}), 400
@@ -16,14 +19,21 @@ def register():
     if User.query.filter_by(username=username).first():
         return jsonify({"message": "Username already exists"}), 409
 
-    new_user = User()
-    new_user.username = username
+    new_user = User(username=username, name=name, bio=bio, avatar_url=avatar_url)
     new_user.set_password(password)
 
     db.session.add(new_user)
     db.session.commit()
 
-    return jsonify({"message": "User registered successfully", "id": new_user.id}), 201
+    return jsonify({
+        "message": "User registered successfully",
+        "id": new_user.id,
+        "username": new_user.username,
+        "name": new_user.name,
+        "bio": new_user.bio,
+        "joined_date": new_user.joined_date.isoformat(), # Converter para string ISO 8601
+        "avatar_url": new_user.avatar_url
+    }), 201
 
 @auth_bp.route('/login', methods=['POST'])
 def login():
@@ -40,7 +50,12 @@ def login():
             "user": {
                 "id": user.id,
                 "username": user.username,
-                "points": user.points
+                "points": user.points,
+                # >>> Novos campos aqui <<<
+                "name": user.name,
+                "bio": user.bio,
+                "joined_date": user.joined_date.isoformat(), # Converter para string ISO 8601
+                "avatar_url": user.avatar_url
             }
         }), 200
     else:
@@ -60,7 +75,12 @@ def get_user_status():
             "user": {
                 "id": current_user.id,
                 "username": current_user.username,
-                "points": current_user.points
+                "points": current_user.points,
+                # >>> Novos campos aqui <<<
+                "name": current_user.name,
+                "bio": current_user.bio,
+                "joined_date": current_user.joined_date.isoformat(), # Converter para string ISO 8601
+                "avatar_url": current_user.avatar_url
             }
         }), 200
     else:
