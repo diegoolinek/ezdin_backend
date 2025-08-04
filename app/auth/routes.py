@@ -47,17 +47,19 @@ def login():
     user = User.query.filter_by(username=username).first()
 
     if user and user.check_password(password):
+        # Chama a função login_user
         login_user(user)
+
+        # Retorna uma resposta de sucesso com status 200, sem redirecionamento
         return jsonify({
             "message": "Login successful",
             "user": {
                 "id": user.id,
                 "username": user.username,
                 "points": user.points,
-                # >>> Novos campos aqui <<<
                 "name": user.name,
                 "bio": user.bio,
-                "joined_date": user.joined_date.isoformat(), # Converter para string ISO 8601
+                "joined_date": user.joined_date.isoformat(),
                 "avatar_url": user.avatar_url
             }
         }), 200
