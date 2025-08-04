@@ -27,6 +27,11 @@ def create_app():
     # Inicializa as extensões com o app
     db.init_app(app)
     login_manager.init_app(app)
+    @login_manager.unauthorized_handler
+    def unauthorized():
+        from flask import jsonify
+        return jsonify({"message": "Usuário não autenticado"}), 401
+
     cors_origins = [
         'http://localhost:3000',
         'http://localhost:5173',
