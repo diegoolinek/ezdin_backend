@@ -25,7 +25,13 @@ def create_app():
     # Inicializa as extensões com o app
     db.init_app(app)
     login_manager.init_app(app)
-    cors.init_app(app, origins=['https://ezdin-frontend.vercel.app'], supports_credentials=True)
+    cors_origins = [
+        'http://localhost:3000',
+        'http://localhost:5173',
+        'https://ezdin-frontend.vercel.app'
+    ]
+
+    cors.init_app(app, origins=cors_origins, supports_credentials=True)
 
     # Configurações do Flask-Login
     login_manager.login_view = 'auth.login'  # type: ignore
