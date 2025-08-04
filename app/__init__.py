@@ -16,8 +16,11 @@ cors = CORS()
 def create_app():
     app = Flask(__name__, instance_relative_config=True)
     app.config.from_object('instance.config.Config')
-    app.config['SESSION_COOKIE_SAMESITE'] = 'None'
-    app.config['SESSION_COOKIE_SECURE'] = True
+    
+    is_production = os.environ.get("FLASK_ENV") == "production"
+
+    app.config['SESSION_COOKIE_SAMESITE'] = 'None' if is_production else 'Lax'
+    app.config['SESSION_COOKIE_SECURE'] = is_production
 
     try:
         os.makedirs(app.instance_path)
