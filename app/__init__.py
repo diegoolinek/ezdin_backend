@@ -16,8 +16,12 @@ cors = CORS()
 def create_app():
     app = Flask(__name__, instance_relative_config=True)
     app.config.from_object('instance.config.Config')
-    app.config['SESSION_COOKIE_SAMESITE'] = 'None'
-    app.config['SESSION_COOKIE_SECURE'] = True
+
+    is_production = os.environ.get("FLASK_ENV") == "production"
+
+    app.config['SESSION_COOKIE_SAMESITE'] = 'None' if is_production else 'Lax'
+    app.config['SESSION_COOKIE_SECURE'] = is_production
+    app.config['SESSION_COOKIE_HTTPONLY'] = True
 
     try:
         os.makedirs(app.instance_path)
@@ -27,6 +31,11 @@ def create_app():
     # Inicializa as extensões com o app
     db.init_app(app)
     login_manager.init_app(app)
+    @login_manager.unauthorized_handler
+    def unauthorized():
+        from flask import jsonify
+        return jsonify({"message": "Usuário não autenticado"}), 401
+
     cors_origins = [
         'http://localhost:3000',
         'http://localhost:5173',

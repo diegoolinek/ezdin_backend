@@ -1,4 +1,4 @@
-from flask import request, jsonify
+from flask import request, jsonify, session
 from flask_login import login_user, logout_user, login_required, current_user
 from app.models import User
 from app import db
@@ -44,25 +44,29 @@ def login():
     username = data.get('username')
     password = data.get('password')
 
-    user = User.query.filter_by(username=username).first()
+    if not username or not password:
+        return jsonify({"message": "Username and password are required"}), 400
 
-    if user and user.check_password(password):
-        login_user(user)
-        return jsonify({
-            "message": "Login successful",
-            "user": {
-                "id": user.id,
-                "username": user.username,
-                "points": user.points,
-                # >>> Novos campos aqui <<<
-                "name": user.name,
-                "bio": user.bio,
-                "joined_date": user.joined_date.isoformat(), # Converter para string ISO 8601
-                "avatar_url": user.avatar_url
-            }
-        }), 200
-    else:
+    user = User.query.filter_by(username=username).first()
+    if not user or not user.check_password(password):
         return jsonify({"message": "Invalid username or password"}), 401
+
+    login_user(user)
+
+    session.permanent = True
+
+    return jsonify({
+        "message": "Login successful",
+        "user": {
+            "id": user.id,
+            "username": user.username,
+            "points": user.points,
+            "name": user.name,
+            "bio": user.bio,
+            "joined_date": user.joined_date.isoformat(),
+            "avatar_url": user.avatar_url
+        }
+    }), 200
 
 
 @auth_bp.route('/logout', methods=['POST'])
