@@ -39,7 +39,8 @@ def create_app():
     cors_origins = [
         'http://localhost:3000',
         'http://localhost:5173',
-        'https://ezdin-frontend.vercel.app'
+        'https://ezdin-frontend.vercel.app',
+        'https://ezdinfrontend.vercel.app'
     ]
 
     cors.init_app(app, origins=cors_origins, supports_credentials=True)
