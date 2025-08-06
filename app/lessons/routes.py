@@ -19,6 +19,13 @@ def get_lessons():
             "title": lesson.title,
             "content": lesson.content,
             "challenge_question": lesson.challenge_question,
+            "options": {
+                "a": lesson.option_a,
+                "b": lesson.option_b,
+                "c": lesson.option_c,
+                "d": lesson.option_d
+            },
+            "explanation": lesson.explanation,
             "points_awarded": lesson.points_awarded,
             "is_completed": is_completed
         })
@@ -39,6 +46,13 @@ def get_lesson_detail(lesson_id):
         "title": lesson.title,
         "content": lesson.content,
         "challenge_question": lesson.challenge_question,
+        "options": {
+            "a": lesson.option_a,
+            "b": lesson.option_b,
+            "c": lesson.option_c,
+            "d": lesson.option_d
+        },
+        "explanation": lesson.explanation,
         "points_awarded": lesson.points_awarded,
         "is_completed": is_completed
     }), 200
@@ -57,7 +71,10 @@ def complete_lesson(lesson_id):
     if progress and progress.is_completed:
         return jsonify({"message": "Lesson already completed"}), 400
 
-    if user_answer == lesson.challenge_answer.strip().lower():
+    # Verificar se a resposta está correta (comparar com correct_option)
+    is_correct = user_answer == lesson.correct_option.lower()
+    
+    if is_correct:
         if not progress:
             progress = UserProgress(user_id=current_user.id, lesson_id=lesson.id)
         progress.is_completed = True
@@ -69,13 +86,19 @@ def complete_lesson(lesson_id):
         db.session.commit()
 
         return jsonify({
-            "message": "Lesson completed successfully!",
+            "message": "Parabéns! Resposta correta!",
             "points_awarded": lesson.points_awarded,
             "user_total_points": current_user.points,
-            "correct": True
+            "correct": True,
+            "explanation": lesson.explanation
         }), 200
     else:
-        return jsonify({"message": "Incorrect answer. Try again!", "correct": False}), 200
+        return jsonify({
+            "message": "Resposta incorreta. Tente novamente!",
+            "correct": False,
+            "correct_answer": lesson.correct_option.upper(),
+            "explanation": lesson.explanation
+        }), 200
 
 @lessons_bp.route('/current_user_progress', methods=['GET'])
 @login_required
@@ -110,12 +133,20 @@ def create_lesson():
     title = data.get('title')
     content = data.get('content')
     challenge_question = data.get('challenge_question')
-    challenge_answer = data.get('challenge_answer')
-    points_awarded = data.get('points_awarded', 10) # Padrão 10 se não for fornecido
+    option_a = data.get('option_a')
+    option_b = data.get('option_b')
+    option_c = data.get('option_c')
+    option_d = data.get('option_d')
+    correct_option = data.get('correct_option', '').lower()
+    explanation = data.get('explanation', '')
+    points_awarded = data.get('points_awarded', 10)
     order_index = data.get('order_index')
 
-    if not all([title, content, challenge_question, challenge_answer, order_index is not None]):
-        return jsonify({"message": "Todos os campos obrigatórios (title, content, challenge_question, challenge_answer, order_index) são necessários."}), 400
+    if not all([title, content, challenge_question, option_a, option_b, option_c, option_d, correct_option, order_index is not None]):
+        return jsonify({"message": "Todos os campos obrigatórios são necessários."}), 400
+
+    if correct_option not in ['a', 'b', 'c', 'd']:
+        return jsonify({"message": "correct_option deve ser 'a', 'b', 'c' ou 'd'"}), 400
 
     if Lesson.query.filter_by(order_index=order_index).first():
         return jsonify({"message": f"Já existe uma lição com o índice de ordem {order_index}. Escolha outro."}), 409
@@ -125,7 +156,12 @@ def create_lesson():
             title=title,
             content=content,
             challenge_question=challenge_question,
-            challenge_answer=challenge_answer.lower(),
+            option_a=option_a,
+            option_b=option_b,
+            option_c=option_c,
+            option_d=option_d,
+            correct_option=correct_option,
+            explanation=explanation,
             points_awarded=points_awarded,
             order_index=order_index
         )

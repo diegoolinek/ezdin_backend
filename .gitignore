@@ -152,6 +152,7 @@ Thumbs.db
 # Cookies and session files
 cookies.txt
 
-# Local configuration files (keep .env.example)
+# Local configuration files
 .env.local
+.env.render
 .env.production
