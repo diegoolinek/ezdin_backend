@@ -12,6 +12,7 @@ class User(UserMixin, db.Model):
     bio = db.Column(db.Text, nullable=True)
     joined_date = db.Column(db.DateTime, default=datetime.datetime.utcnow, nullable=False) # Data de cadastro
     avatar_url = db.Column(db.String(256), nullable=True) # URL para a imagem do avatar, opcional
+    is_admin = db.Column(db.Boolean, default=False) # Campo para determinar se é admin
 
     progresses = db.relationship('UserProgress', backref='user', lazy='dynamic')
 
@@ -29,7 +30,13 @@ class Lesson(db.Model):
     title = db.Column(db.String(128), nullable=False)
     content = db.Column(db.Text, nullable=False)
     challenge_question = db.Column(db.String(256), nullable=False)
-    challenge_answer = db.Column(db.String(128), nullable=False)
+    # Para múltipla escolha
+    option_a = db.Column(db.String(256), nullable=True)
+    option_b = db.Column(db.String(256), nullable=True)  
+    option_c = db.Column(db.String(256), nullable=True)
+    option_d = db.Column(db.String(256), nullable=True)
+    correct_option = db.Column(db.String(1), nullable=False)  # 'a', 'b', 'c', 'd'
+    explanation = db.Column(db.Text, nullable=True)
     points_awarded = db.Column(db.Integer, default=10)
     order_index = db.Column(db.Integer, unique=True, nullable=False)
 

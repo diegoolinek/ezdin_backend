@@ -64,7 +64,8 @@ def login():
             "name": user.name,
             "bio": user.bio,
             "joined_date": user.joined_date.isoformat(),
-            "avatar_url": user.avatar_url
+            "avatar_url": user.avatar_url,
+            "is_admin": user.is_admin
         }
     }), 200
 
@@ -89,7 +90,8 @@ def get_user_status():
                 "name": current_user.name,
                 "bio": current_user.bio,
                 "joined_date": current_user.joined_date.isoformat(), # Converter para string ISO 8601
-                "avatar_url": current_user.avatar_url
+                "avatar_url": current_user.avatar_url,
+                "is_admin": current_user.is_admin
             }
         }), 200
     else:
@@ -133,10 +135,134 @@ def update_profile():
                 "name": user.name,
                 "bio": user.bio,
                 "joined_date": user.joined_date.isoformat(),
-                "avatar_url": user.avatar_url
+                "avatar_url": user.avatar_url,
+                "is_admin": user.is_admin
             }
         }), 200
 
     except Exception as e:
         db.session.rollback() # Desfaz a transação em caso de erro
         return jsonify({"message": f"Erro ao atualizar perfil: {str(e)}"}), 500
+
+
+# === ROTAS ADMINISTRATIVAS ===
+
+@auth_bp.route('/admin/users', methods=['GET'])
+@login_required
+def get_all_users():
+    """Rota para admins listarem todos os usuários"""
+    if not current_user.is_admin:
+        return jsonify({"message": "Acesso negado. Apenas administradores."}), 403
+    
+    users = User.query.all()
+    users_data = []
+    
+    for user in users:
+        users_data.append({
+            "id": user.id,
+            "username": user.username,
+            "name": user.name,
+            "points": user.points,
+            "is_admin": user.is_admin,
+            "joined_date": user.joined_date.isoformat(),
+            "bio": user.bio
+        })
+    
+    return jsonify({"users": users_data}), 200
+
+
+@auth_bp.route('/admin/users/<int:user_id>/promote', methods=['PUT'])
+@login_required
+def promote_user_to_admin(user_id):
+    """Rota para promover um usuário a administrador"""
+    if not current_user.is_admin:
+        return jsonify({"message": "Acesso negado. Apenas administradores."}), 403
+    
+    user = User.query.get(user_id)
+    if not user:
+        return jsonify({"message": "Usuário não encontrado"}), 404
+    
+    try:
+        user.is_admin = True
+        db.session.add(user)
+        db.session.commit()
+        
+        return jsonify({
+            "message": f"Usuário {user.username} promovido a administrador com sucesso!",
+            "user": {
+                "id": user.id,
+                "username": user.username,
+                "name": user.name,
+                "is_admin": user.is_admin
+            }
+        }), 200
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"message": f"Erro ao promover usuário: {str(e)}"}), 500
+
+
+@auth_bp.route('/admin/users/<int:user_id>/demote', methods=['PUT'])
+@login_required
+def demote_user_from_admin(user_id):
+    """Rota para remover privilégios de administrador de um usuário"""
+    if not current_user.is_admin:
+        return jsonify({"message": "Acesso negado. Apenas administradores."}), 403
+    
+    user = User.query.get(user_id)
+    if not user:
+        return jsonify({"message": "Usuário não encontrado"}), 404
+    
+    # Prevenir que um admin se remova (opcional)
+    if user.id == current_user.id:
+        return jsonify({"message": "Você não pode remover seus próprios privilégios de administrador"}), 400
+    
+    try:
+        user.is_admin = False
+        db.session.add(user)
+        db.session.commit()
+        
+        return jsonify({
+            "message": f"Privilégios de administrador removidos de {user.username}",
+            "user": {
+                "id": user.id,
+                "username": user.username,
+                "name": user.name,
+                "is_admin": user.is_admin
+            }
+        }), 200
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"message": f"Erro ao remover privilégios: {str(e)}"}), 500
+
+
+@auth_bp.route('/admin/users/<int:user_id>', methods=['DELETE'])
+@login_required
+def delete_user(user_id):
+    """Rota para deletar um usuário (apenas para casos extremos)"""
+    if not current_user.is_admin:
+        return jsonify({"message": "Acesso negado. Apenas administradores."}), 403
+    
+    user = User.query.get(user_id)
+    if not user:
+        return jsonify({"message": "Usuário não encontrado"}), 404
+    
+    # Prevenir que um admin se delete
+    if user.id == current_user.id:
+        return jsonify({"message": "Você não pode deletar sua própria conta"}), 400
+    
+    try:
+        # Deletar progresses do usuário primeiro (devido à foreign key)
+        from app.models import UserProgress
+        UserProgress.query.filter_by(user_id=user.id).delete()
+        
+        username = user.username
+        db.session.delete(user)
+        db.session.commit()
+        
+        return jsonify({"message": f"Usuário {username} deletado com sucesso"}), 200
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"message": f"Erro ao deletar usuário: {str(e)}"}), 500
